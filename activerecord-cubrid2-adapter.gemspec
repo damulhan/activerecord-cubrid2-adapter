@@ -9,13 +9,13 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = '>= 2.5.0'
 
-  spec.license       = 'MIT'
+  spec.licenses      = ['MIT', 'GPL-2.0']
   spec.authors       = ['Eui-Taik Na']
   spec.email         = ['damulhan@gmail.com']
   spec.homepage      = 'https://github.com/damulhan/activerecord-cubrid2-adapter'
   spec.summary       = 'ActiveRecord Cubrid Adapter.'
   spec.description   = 'ActiveRecord Cubrid Adapter. Cubrid 9 and upward. Based on cubrid gem.'
-  
+
   spec.files         = `git ls-files -z`.split("\x0")
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
