@@ -41,7 +41,7 @@ module ActiveRecord
         date: { name: 'date' },
         binary: { name: 'blob' },
         blob: { name: 'blob' },
-        boolean: { name: 'tinyint', limit: 1 },
+        boolean: { name: 'smallint' },
         json: { name: 'json' }
       }
 
@@ -123,12 +123,16 @@ module ActiveRecord
         true
       end
 
-      def get_advisory_lock(lock_name, timeout = 0) # :nodoc:
-        query_value("SELECT GET_LOCK(#{quote(lock_name.to_s)}, #{timeout})") == 1
+      # In cubrid: locking is done automatically
+      # See: https://www.cubrid.org/manual/en/11.2/sql/transaction.html#id13
+      def get_advisory_lock(_lock_name, _timeout = 0) # :nodoc:
+        # query_value("SELECT GET_LOCK(#{quote(lock_name.to_s)}, #{timeout})") == 1
+        true
       end
 
-      def release_advisory_lock(lock_name) # :nodoc:
-        query_value("SELECT RELEASE_LOCK(#{quote(lock_name.to_s)})") == 1
+      def release_advisory_lock(_lock_name) # :nodoc:
+        # query_value("SELECT RELEASE_LOCK(#{quote(lock_name.to_s)})") == 1
+        true
       end
 
       def native_database_types
@@ -234,7 +238,7 @@ module ActiveRecord
 
       # Drops the database specified on the +name+ attribute
       # and creates it again using the provided +options+.
-      def recreate_database(name, options = {})
+      def recreate_database(_name, _options = {})
         # drop_database(name)
         # sql = create_database(name, options)
         # reconnect!
@@ -285,8 +289,8 @@ module ActiveRecord
         show_variable 'collation_database'
       end
 
-      def table_comment(table_name) # :nodoc:
-        raise "add table comment not supported"
+      def table_comment(_table_name) # :nodoc:
+        raise 'add table comment not supported'
         # scope = quoted_scope(table_name)
 
         # query_value(<<~SQL, 'SCHEMA').presence
@@ -386,40 +390,13 @@ module ActiveRecord
         sql
       end
 
-      def foreign_keys(table_name)
-        raise ArgumentError unless table_name.present?
+      def foreign_keys(_table_name)
+        # raise ArgumentError unless table_name.present?
 
-        scope = quoted_scope(table_name)
+        # In Cubrid, we cannot know referencing table that foreign key indicates from the system catalog.
+        # See: https://www.cubrid.com/qna/3822484
 
-        fk_info = exec_query(<<~SQL, 'SCHEMA')
-          SELECT fk.referenced_table_name AS 'to_table',
-                 fk.referenced_column_name AS 'primary_key',
-                 fk.column_name AS 'column',
-                 fk.constraint_name AS 'name',
-                 rc.update_rule AS 'on_update',
-                 rc.delete_rule AS 'on_delete'
-          FROM information_schema.referential_constraints rc
-          JOIN information_schema.key_column_usage fk
-          USING (constraint_schema, constraint_name)
-          WHERE fk.referenced_column_name IS NOT NULL
-            AND fk.table_schema = #{scope[:schema]}
-            AND fk.table_name = #{scope[:name]}
-            AND rc.constraint_schema = #{scope[:schema]}
-            AND rc.table_name = #{scope[:name]}
-        SQL
-
-        fk_info.map do |row|
-          options = {
-            column: row['column'],
-            name: row['name'],
-            primary_key: row['primary_key']
-          }
-
-          options[:on_update] = extract_foreign_key_action(row['on_update'])
-          options[:on_delete] = extract_foreign_key_action(row['on_delete'])
-
-          ForeignKeyDefinition.new(table_name, row['to_table'], options)
-        end
+        []
       end
 
       def table_options(table_name) # :nodoc:
@@ -575,12 +552,12 @@ module ActiveRecord
       end
 
       def register_integer_type(mapping, key, **options)
-        mapping.register_type(key) do |sql_type|
+        mapping.register_type(key) do |_sql_type|
           # if /\bunsigned\b/.match?(sql_type)
           #   Type::UnsignedInteger.new(**options)
           # else
-            Type::Integer.new(**options)
-          #end
+          Type::Integer.new(**options)
+          # end
         end
       end
 
@@ -593,30 +570,30 @@ module ActiveRecord
       end
 
       # See https://www.cubrid.com/tutorial/3793681
-      #ER_FILSORT_ABORT        = 1028
+      # ER_FILSORT_ABORT        = 1028
       ER_DUP_ENTRY            = 212
-      ER_NOT_NULL_VIOLATION   = 631 
-      #ER_NO_REFERENCED_ROW    = 1216
-      #ER_ROW_IS_REFERENCED    = 1217
+      ER_NOT_NULL_VIOLATION   = 631
+      # ER_NO_REFERENCED_ROW    = 1216
+      # ER_ROW_IS_REFERENCED    = 1217
       ER_DO_NOT_HAVE_DEFAULT  = 1364
-      #ER_ROW_IS_REFERENCED_2  = 1451
-      #ER_NO_REFERENCED_ROW_2  = 1452
-      ER_DATA_TOO_LONG        = 781,531
+      # ER_ROW_IS_REFERENCED_2  = 1451
+      # ER_NO_REFERENCED_ROW_2  = 1452
+      ER_DATA_TOO_LONG        = 781, 531
       ER_OUT_OF_RANGE         = 935
       ER_LOCK_DEADLOCK        = [72..76]
-      ER_CANNOT_ADD_FOREIGN   = [920,921,922,927]
-      ER_CANNOT_CREATE_TABLE  = 65, 
-      #ER_LOCK_WAIT_TIMEOUT    = 1205
-      ER_QUERY_INTERRUPTED    = 790
-      #ER_QUERY_TIMEOUT        = 3024
-      ER_FK_INCOMPATIBLE_COLUMNS = [918,923]
+      ER_CANNOT_ADD_FOREIGN   = [920, 921, 922, 927]
+      ER_CANNOT_CREATE_TABLE  = 65,
+                                # ER_LOCK_WAIT_TIMEOUT    = 1205
+                                ER_QUERY_INTERRUPTED = 790
+      # ER_QUERY_TIMEOUT        = 3024
+      ER_FK_INCOMPATIBLE_COLUMNS = [918, 923]
 
       def translate_exception(exception, message:, sql:, binds:)
         case error_number(exception)
         when ER_DUP_ENTRY
           RecordNotUnique.new(message, sql: sql, binds: binds)
-        #when ER_NO_REFERENCED_ROW, ER_ROW_IS_REFERENCED, ER_ROW_IS_REFERENCED_2, ER_NO_REFERENCED_ROW_2
-          #InvalidForeignKey.new(message, sql: sql, binds: binds)
+          # when ER_NO_REFERENCED_ROW, ER_ROW_IS_REFERENCED, ER_ROW_IS_REFERENCED_2, ER_NO_REFERENCED_ROW_2
+          # InvalidForeignKey.new(message, sql: sql, binds: binds)
         when ER_CANNOT_ADD_FOREIGN, ER_FK_INCOMPATIBLE_COLUMNS
           mismatched_foreign_key(message, sql: sql, binds: binds)
         when ER_CANNOT_CREATE_TABLE
@@ -682,7 +659,7 @@ module ActiveRecord
 
       def supports_rename_index?
         # https://www.cubrid.org/manual/en/10.0/sql/schema/index_stmt.html#alter-index
-        database_version >= "10.0"
+        database_version >= '10.0'
       end
 
       def configure_connection; end
@@ -754,7 +731,7 @@ module ActiveRecord
       end
 
       ActiveRecord::Type.register(:string, CubridString, adapter: :cubrid)
-      #ActiveRecord::Type.register(:unsigned_integer, Type::UnsignedInteger, adapter: :cubrid)
+      # ActiveRecord::Type.register(:unsigned_integer, Type::UnsignedInteger, adapter: :cubrid)
     end
   end
 end

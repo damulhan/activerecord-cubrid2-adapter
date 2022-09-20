@@ -17,6 +17,15 @@ module ActiveRecord
           execute(sql, name)
         end
 
+        def query_values(sql, name = nil) # :nodoc:
+          res = exec_query(sql, name)
+          res&.rows&.map(&:first)
+        end
+
+        def query_value(sql, name = nil) # :nodoc:
+          _single_value_from_rows(query(sql, name))
+        end
+
         READ_QUERY = ActiveRecord::ConnectionAdapters::AbstractAdapter.build_read_query_regexp(
           :begin, :commit, :explain, :select, :set, :show, :release, :savepoint, :rollback, :describe, :desc, :with
         ) # :nodoc:
@@ -38,10 +47,6 @@ module ActiveRecord
           # @connection.query_options[:database_timezone] = ActiveRecord.default_timezone
 
           super
-        end
-
-        def query_values(sql, name = nil) # :nodoc:
-          exec_query(sql, name).map(&:first)
         end
 
         def exec_query(sql, name = 'SQL', binds = [], prepare: false)
@@ -87,6 +92,11 @@ module ActiveRecord
             end
           end
           rows
+        end
+
+        def _single_value_from_rows(rows)
+          row = rows.fetch
+          row && row.first
         end
 
         def execute_batch(statements, name = nil)

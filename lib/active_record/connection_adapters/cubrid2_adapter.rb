@@ -2,7 +2,6 @@
 
 require 'active_record/connection_adapters/abstract_cubrid2_adapter'
 require 'active_record/connection_adapters/cubrid2/database_statements'
-
 require 'cubrid2'
 
 module ActiveRecord
