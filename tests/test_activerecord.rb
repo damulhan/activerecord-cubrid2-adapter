@@ -14,7 +14,7 @@ class CubridTest < ActiveRecord::Base
 end
 
 class Game < ActiveRecord::Base
-  self.table_name = 'game'
+  self.table_name = 'public.game'
 end
 
 class Olympic < ActiveRecord::Base
@@ -31,12 +31,14 @@ class CUBRID_ActiveRecordTest < Test::Unit::TestCase
       host: 'localhost',
       username: 'dba',
       password: '',
-      database: 'demodb'
+      database: 'demodb',
+      schema: 'public',
     )
 
     @con = adapter.connection
-    # @con.auto_commit = true
-
+    
+    pp @con.foreign_keys('game')
+    
     puts "-- cubrid server version: #{@con.server_version}"
 
     ActiveRecord::Base.connection.drop_table TABLE_NAME if ActiveRecord::Base.connection.table_exists?(TABLE_NAME)

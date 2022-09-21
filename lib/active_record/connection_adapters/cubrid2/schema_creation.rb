@@ -5,14 +5,13 @@ module ActiveRecord
     module Cubrid2
       class SchemaCreation < ActiveRecord::ConnectionAdapters::SchemaCreation # :nodoc:
 
-        #delegate :add_sql_comment!, :mariadb?, to: :@conn, private: true
         delegate :add_sql_comment!, to: :@conn, private: true
 
         private
 
-        def visit_DropForeignKey(name)
-          "DROP FOREIGN KEY #{name}"
-        end
+        # def visit_DropForeignKey(name)
+        #   "DROP FOREIGN KEY #{name}"
+        # end
 
         def visit_AddColumnDefinition(o)
           add_column_position!(super, column_options(o.column))

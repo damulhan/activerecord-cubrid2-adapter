@@ -30,6 +30,7 @@ if RUBY_PLATFORM =~ /mswin|mingw/
 end
 
 # load c extension
+gem 'cubrid', '>= 10.0'
 require 'cubrid'
 
 require 'cubrid2/version' unless defined? Cubrid2::VERSION

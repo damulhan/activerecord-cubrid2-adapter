@@ -159,16 +159,16 @@ module ActiveRecord
 
       # REFERENTIAL INTEGRITY ====================================
 
-      def disable_referential_integrity # :nodoc:
-        old = query_value('SELECT @@FOREIGN_KEY_CHECKS')
+      # def disable_referential_integrity # :nodoc:
+      #   old = query_value('SELECT @@FOREIGN_KEY_CHECKS')
 
-        begin
-          update('SET FOREIGN_KEY_CHECKS = 0')
-          yield
-        ensure
-          update("SET FOREIGN_KEY_CHECKS = #{old}")
-        end
-      end
+      #   begin
+      #     update('SET FOREIGN_KEY_CHECKS = 0')
+      #     yield
+      #   ensure
+      #     update("SET FOREIGN_KEY_CHECKS = #{old}")
+      #   end
+      # end
 
       # CONNECTION MANAGEMENT ====================================
 
@@ -236,43 +236,19 @@ module ActiveRecord
 
       # SCHEMA STATEMENTS ========================================
 
-      # Drops the database specified on the +name+ attribute
-      # and creates it again using the provided +options+.
+      # Drops the database: not supported now
       def recreate_database(_name, _options = {})
-        # drop_database(name)
-        # sql = create_database(name, options)
-        # reconnect!
-        # sql
-        raise 'Create/Drop database not supported'
+        raise 'In Cubrid create/drop database not supported'
       end
 
-      # Create a new Cubrid database with optional <tt>:charset</tt> and <tt>:collation</tt>.
-      # Charset defaults to utf8mb4.
-      #
-      # Example:
-      #   create_database 'charset_test', charset: 'latin1', collation: 'latin1_bin'
-      #   create_database 'matt_development'
-      #   create_database 'matt_development', charset: :big5
+      # Create a new Cubrid database: not supported now
       def create_database(_name, _options = {})
-        # if options[:collation]
-        #   execute "CREATE DATABASE #{quote_table_name(name)} DEFAULT COLLATE #{quote_table_name(options[:collation])}"
-        # elsif options[:charset]
-        #   execute "CREATE DATABASE #{quote_table_name(name)} DEFAULT CHARACTER SET #{quote_table_name(options[:charset])}"
-        # elsif row_format_dynamic_by_default?
-        #   execute "CREATE DATABASE #{quote_table_name(name)} DEFAULT CHARACTER SET `utf8mb4`"
-        # else
-        #  raise 'Configure a supported :charset and ensure innodb_large_prefix is enabled to support indexes on varchar(255) string columns.'
-        # end
-        raise 'Create/Drop database not supported'
+        raise 'In Cubrid create/drop database not supported'
       end
 
-      # Drops a Cubrid database.
-      #
-      # Example:
-      #   drop_database('sebastian_development')
+      # Drops a Cubrid database: not supported now
       def drop_database(_name) # :nodoc:
-        # execute "DROP DATABASE IF EXISTS #{quote_table_name(name)}"
-        raise 'Create/Drop database not supported'
+        raise 'In Cubrid create/drop database not supported'
       end
 
       def current_database
@@ -281,30 +257,33 @@ module ActiveRecord
 
       # Returns the database character set.
       def charset
-        show_variable 'character_set_database'
+        # show_variable 'character_set_database'
+        ''
       end
 
       # Returns the database collation strategy.
       def collation
-        show_variable 'collation_database'
+        # show_variable 'collation_database'
+        ''
       end
 
-      def table_comment(_table_name) # :nodoc:
-        raise 'add table comment not supported'
-        # scope = quoted_scope(table_name)
+      def table_comment(table_name) # :nodoc:
+        raise 'table comment not supported' unless supports_comments?
 
-        # query_value(<<~SQL, 'SCHEMA').presence
-        #   SELECT table_comment
-        #   FROM information_schema.tables
-        #   WHERE table_schema = #{scope[:schema]}
-        #     AND table_name = #{scope[:name]}
-        # SQL
+        query_value(<<~SQL, 'SCHEMA').presence
+          SELECT comment
+          FROM db_class
+          WHERE owner_name = 'PUBLIC'
+            AND class_type = 'CLASS'
+            AND is_system_class = 'NO'
+            AND class_name = #{quote_table_name(table_name)}
+        SQL
       end
 
       def change_table_comment(table_name, comment_or_changes) # :nodoc:
         comment = extract_new_comment_value(comment_or_changes)
         comment = '' if comment.nil?
-        execute("ALTER TABLE #{quote_table_name(table_name)} COMMENT #{quote(comment)}")
+        execute("ALTER TABLE #{quote_table_name(table_name)} COMMENT=#{quote(comment)}")
       end
 
       # Renames a table.
@@ -332,10 +311,9 @@ module ActiveRecord
       # it can be helpful to provide these in a migration's +change+ method so it can be reverted.
       # In that case, +options+ and the block will be used by create_table.
       def drop_table(table_name, options = {})
-        temporary = (options[:temporary] ? 'TEMPORARY' : '')
         if_exists = (options[:if_exists] ? 'IF EXISTS' : '')
-        cascade = (options[:force] == :cascade ? 'CASCADE' : '')
-        execute "DROP #{temporary} TABLE #{if_exists} #{quote_table_name(table_name)} #{cascade}"
+        cascade = (options[:force] == :cascade ? 'CASCADE CONSTRAINTS' : '')
+        execute "DROP TABLE #{if_exists} #{quote_table_name(table_name)} #{cascade}"
       end
 
       def rename_index(table_name, old_name, new_name)
@@ -390,26 +368,63 @@ module ActiveRecord
         sql
       end
 
-      def foreign_keys(_table_name)
-        # raise ArgumentError unless table_name.present?
+      def foreign_keys(table_name)
+        raise ArgumentError unless table_name.present?
 
         # In Cubrid, we cannot know referencing table that foreign key indicates from the system catalog.
         # See: https://www.cubrid.com/qna/3822484
+        # So we use the raw sql generated by 'SHOW CREATE TABLE ...'
 
-        []
+        tableinfo = create_table_info(table_name)
+        lines = tableinfo.gsub('CONSTRAINT', "\nCONSTRAINT").split('CONSTRAINT')
+
+        fkeys = []
+        lines.each do |line|
+          fk_matches = line.match(/(.*) FOREIGN KEY (.*)/)
+          next if fk_matches.nil?
+
+          name = _strip_key_str(fk_matches[1])
+          detail_match = fk_matches[2].match(/(.*) REFERENCES (.*) ON DELETE (.*) ON UPDATE (.*)\s*/)
+
+          column = _strip_key_str(detail_match[1])
+          to_table_match = detail_match[2]&.match(/(.*)\s+\((.*)\)/)
+
+          to_table = _strip_key_str(to_table_match[1])
+          primary_key = _strip_key_str(to_table_match[2])
+
+          options = {
+            name: name,
+            column: column,
+            primary_key: primary_key
+          }
+
+          options[:on_update] = extract_foreign_key_action(_strip_left_str(detail_match[3]))
+          options[:on_delete] = extract_foreign_key_action(_strip_left_str(detail_match[4]))
+
+          fkeys << ForeignKeyDefinition.new(table_name, to_table, options)
+        end
+
+        fkeys
+      end
+
+      def _strip_key_str(str)
+        str.gsub(/[\[\]]/, '')
+          .gsub(/[\(\)]/, '')
+          .gsub(/^\s+/, '').gsub(/\s+$/, '')
+      end
+
+      def _strip_left_str(str)
+        str.gsub(%r{([;,\)].*)$}, '')
       end
 
       def table_options(table_name) # :nodoc:
         table_options = {}
 
-        create_table_info = create_table_info(table_name)
+        tableinfo = create_table_info(table_name)
 
         # strip create_definitions and partition_options
         # Be aware that `create_table_info` might not include any table options due to `NO_TABLE_OPTIONS` sql mode.
-        raw_table_options = create_table_info.sub(/\A.*\n\) ?/m, '').sub(%r{\n/\*!.*\*/\n\z}m, '').strip
-
-        # strip AUTO_INCREMENT
-        raw_table_options.sub!(/(ENGINE=\w+)(?: AUTO_INCREMENT=\d+)/, '\1')
+        raw_table_options = tableinfo.sub(/\A.*\n\) ?/m, '').sub(%r{\n/\*!.*\*/\n\z}m, '').strip
 
         table_options[:options] = raw_table_options unless raw_table_options.blank?
 
@@ -420,10 +435,8 @@ module ActiveRecord
       end
 
       # SHOW VARIABLES LIKE 'name'
-      def show_variable(name)
-        query_value("SELECT @@#{name}", 'SCHEMA')
-      rescue ActiveRecord::StatementInvalid
-        nil
+      def show_variable(_name)
+        raise 'Not supported'
       end
 
       def primary_keys(table_name) # :nodoc:
@@ -434,17 +447,6 @@ module ActiveRecord
           prikeys << col[:Field] if col[:Key] == 'PRI'
         end
         prikeys
-
-        # scope = quoted_scope(table_name)
-
-        # query_values(<<~SQL, "SCHEMA")
-        #   SELECT column_name
-        #   FROM information_schema.statistics
-        #   WHERE index_name = 'PRIMARY'
-        #     AND table_schema = #{scope[:schema]}
-        #     AND table_name = #{scope[:name]}
-        #   ORDER BY seq_in_index
-        # SQL
       end
 
       def default_uniqueness_comparison(attribute, value, klass) # :nodoc:
@@ -671,7 +673,8 @@ module ActiveRecord
       end
 
       def create_table_info(table_name) # :nodoc:
-        exec_query("SHOW CREATE TABLE #{quote_table_name(table_name)}", 'SCHEMA').first['Create Table']
+        res = exec_query("SHOW CREATE TABLE #{quote_table_name(table_name)}", 'SCHEMA')
+        res.first['CREATE TABLE']
       end
 
       def arel_visitor
@@ -731,7 +734,6 @@ module ActiveRecord
       end
 
       ActiveRecord::Type.register(:string, CubridString, adapter: :cubrid)
-      # ActiveRecord::Type.register(:unsigned_integer, Type::UnsignedInteger, adapter: :cubrid)
     end
   end
 end

@@ -18,12 +18,8 @@ module ActiveRecord
                 cubrid_index_type = row[:Index_type].downcase.to_sym
 
                 # currently only support btree
-                # https://www.cubrid.org/manual/ko/10.1/sql/query/show.html?highlight=btree#show-index
+                # https://www.cubrid.org/manual/en/11.2/sql/query/show.html?highlight=show%20index#show-index
                 index_using = cubrid_index_type
-                case cubrid_index_type
-                when :btree
-                  index_using = cubrid_index_type
-                end
                 index_type = nil
 
                 indexes << [
@@ -35,12 +31,14 @@ module ActiveRecord
                     orders: {},
                     type: index_type,
                     using: index_using,
-                    comment: row[:Index_comment].presence }
+                    comment: row[:Comment].presence,
+                    null: row[:Null] == 'YES',
+                    visible: row[:Visible] == 'YES' }
                 ]
               end
 
-              if row[:Expression]
-                expression = row[:Expression]
+              if row[:Func]
+                expression = row[:Func]
                 expression = +"(#{expression})" unless expression.start_with?('(')
                 indexes.last[-2] << expression
                 indexes.last[-1][:expressions] ||= {}
@@ -132,9 +130,6 @@ module ActiveRecord
 
         private
 
-        # CHARSETS_OF_4BYTES_MAXLEN = ["utf8mb4", "utf16", "utf16le", "utf32"]
-        # CHARSETS_OF_4BYTES_MAXLEN = ['utf8']
-
         def row_format_dynamic_by_default?
           false
         end
@@ -154,8 +149,6 @@ module ActiveRecord
         end
 
         def new_column_from_field(_table_name, field)
-          # puts "### new_column_from_field: #{table_name} #{field}"
-
           type_metadata = fetch_type_metadata(field[:Type], field[:Extra])
           default = field[:Default]
           default_function = nil
@@ -182,7 +175,11 @@ module ActiveRecord
         end
 
         def extract_foreign_key_action(specifier)
-          super unless specifier == 'RESTRICT'
+          case specifier
+          when "CASCADE"; :cascade
+          when "SET NULL"; :nullify
+          when "RESTRICT"; :restrict
+          end
         end
 
         def add_index_length(quoted_columns, **options)
