@@ -32,13 +32,11 @@ class CUBRID_ActiveRecordTest < Test::Unit::TestCase
       username: 'dba',
       password: '',
       database: 'demodb',
-      schema: 'public',
+      schema: 'public'
     )
 
     @con = adapter.connection
-    
-    pp @con.foreign_keys('game')
-    
+
     puts "-- cubrid server version: #{@con.server_version}"
 
     ActiveRecord::Base.connection.drop_table TABLE_NAME if ActiveRecord::Base.connection.table_exists?(TABLE_NAME)
