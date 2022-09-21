@@ -112,7 +112,7 @@ module ActiveRecord
       end
 
       def supports_advisory_locks?
-        true
+        false
       end
 
       def supports_insert_on_duplicate_skip?
@@ -363,7 +363,8 @@ module ActiveRecord
       end
 
       def add_sql_comment!(sql, comment) # :nodoc:
-        # raise 'add comment not supported'
+        return sql unless supports_comments?
+
         sql << " COMMENT #{quote(comment)}" if comment.present?
         sql
       end
@@ -409,12 +410,12 @@ module ActiveRecord
 
       def _strip_key_str(str)
         str.gsub(/[\[\]]/, '')
-          .gsub(/[\(\)]/, '')
-          .gsub(/^\s+/, '').gsub(/\s+$/, '')
+           .gsub(/[()]/, '')
+           .gsub(/^\s+/, '').gsub(/\s+$/, '')
       end
 
       def _strip_left_str(str)
-        str.gsub(%r{([;,\)].*)$}, '')
+        str.gsub(/([;,)].*)$/, '')
       end
 
       def table_options(table_name) # :nodoc:
@@ -490,9 +491,9 @@ module ActiveRecord
         (order_columns << super).join(', ')
       end
 
-      def strict_mode?
-        self.class.type_cast_config_to_boolean(@config.fetch(:strict, true))
-      end
+      # def strict_mode?
+      #   self.class.type_cast_config_to_boolean(@config.fetch(:strict, true))
+      # end
 
       def default_index_type?(index) # :nodoc:
         index.using == :btree || super
