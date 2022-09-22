@@ -176,9 +176,9 @@ module ActiveRecord
 
         def extract_foreign_key_action(specifier)
           case specifier
-          when "CASCADE"; :cascade
-          when "SET NULL"; :nullify
-          when "RESTRICT"; :restrict
+          when 'CASCADE' then :cascade
+          when 'SET NULL' then :nullify
+          when 'RESTRICT' then :restrict
           end
         end
 
@@ -211,8 +211,10 @@ module ActiveRecord
         end
 
         def extract_schema_qualified_name(string)
-          schema, name = string.to_s.scan(/[^`.\s]+|`[^`]*`/)
-          unless name
+          q1 = '[`\"\[]'
+          q2 = '[`\"\]]'
+          schema, name = string.scan(/[^`"\[\].]+|#{q1}[^"]*#{q2}/)
+          if name.nil?
             name = schema
             schema = nil
           end

@@ -78,7 +78,7 @@ module ActiveRecord
           columns = stmt.column_info.map { |col| col['name'] }
           rows = _extract_rows_from_stmt(stmt)
           build_result(columns: columns, rows: rows)
-        end 
+        end
 
         def _extract_rows_from_stmt(stmt, as_hash: false)
           rows = []
@@ -117,65 +117,6 @@ module ActiveRecord
 
         def supports_set_server_option?
           @connection.respond_to?(:set_server_option)
-        end
-
-        def multi_statements_enabled?(flags)
-          if flags.is_a?(Array)
-            flags.include?('MULTI_STATEMENTS')
-          else
-            (flags & Cubrid2::Client::MULTI_STATEMENTS) != 0
-          end
-        end
-
-        def with_multi_statements
-          previous_flags = @config[:flags]
-
-          unless multi_statements_enabled?(previous_flags)
-            if supports_set_server_option?
-              @connection.set_server_option(Cubrid2::Client::OPTION_MULTI_STATEMENTS_ON)
-            else
-              @config[:flags] = Cubrid2::Client::MULTI_STATEMENTS
-              reconnect!
-            end
-          end
-
-          yield
-        ensure
-          unless multi_statements_enabled?(previous_flags)
-            if supports_set_server_option?
-              @connection.set_server_option(Cubrid2::Client::OPTION_MULTI_STATEMENTS_OFF)
-            else
-              @config[:flags] = previous_flags
-              reconnect!
-            end
-          end
-        end
-
-        def combine_multi_statements(total_sql)
-          total_sql.each_with_object([]) do |sql, total_sql_chunks|
-            previous_packet = total_sql_chunks.last
-            if max_allowed_packet_reached?(sql, previous_packet)
-              total_sql_chunks << +sql
-            else
-              previous_packet << ";\n"
-              previous_packet << sql
-            end
-          end
-        end
-
-        def max_allowed_packet_reached?(current_packet, previous_packet)
-          if current_packet.bytesize > max_allowed_packet
-            raise ActiveRecordError,
-                  "Fixtures set is too large #{current_packet.bytesize}. Consider increasing the max_allowed_packet variable."
-          elsif previous_packet.nil?
-            true
-          else
-            (current_packet.bytesize + previous_packet.bytesize + 2) > max_allowed_packet
-          end
-        end
-
-        def max_allowed_packet
-          @max_allowed_packet ||= show_variable('max_allowed_packet')
         end
 
         def exec_stmt_and_free(sql, name, binds, cache_stmt: false)

@@ -687,10 +687,12 @@ module ActiveRecord
       end
 
       def mismatched_foreign_key(message, sql:, binds:)
+        q1 = '[`"\[]'
+        q2 = '[`"\]]'
         match = /
-          (?:CREATE|ALTER)\s+TABLE\s*(?:`?\w+`?\.)?`?(?<table>\w+)`?.+?
-          FOREIGN\s+KEY\s*\(`?(?<foreign_key>\w+)`?\)\s*
-          REFERENCES\s*(`?(?<target_table>\w+)`?)\s*\(`?(?<primary_key>\w+)`?\)
+          (?:CREATE|ALTER)\s+TABLE\s*(?:#{q1}?\w+#{q2}?\.)?#{q1}?(?<table>\w+)#{q2}?.+?
+          FOREIGN\s+KEY\s*\(#{q1}?(?<foreign_key>\w+)#{q2}?\)\s*
+          REFERENCES\s*(#{q1}?(?<target_table>\w+)#{q2}?)\s*\(#{q1}?(?<primary_key>\w+)#{q2}?\)
         /xmi.match(sql)
 
         options = {

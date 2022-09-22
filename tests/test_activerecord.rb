@@ -13,14 +13,6 @@ class CubridTest < ActiveRecord::Base
   self.table_name = TABLE_NAME
 end
 
-class Game < ActiveRecord::Base
-  self.table_name = 'public.game'
-end
-
-class Olympic < ActiveRecord::Base
-  self.table_name = 'olympic'
-end
-
 class CUBRID_ActiveRecordTest < Test::Unit::TestCase
   def setup
     puts '### setup '
@@ -31,8 +23,7 @@ class CUBRID_ActiveRecordTest < Test::Unit::TestCase
       host: 'localhost',
       username: 'dba',
       password: '',
-      database: 'demodb',
-      schema: 'public'
+      database: 'demodb'
     )
 
     @con = adapter.connection
@@ -79,7 +70,7 @@ class CUBRID_ActiveRecordTest < Test::Unit::TestCase
 
     CubridTest.destroy_all
 
-    assert(CubridTest.count == 0, 'Table row count mismatch')
+    assert(CubridTest.count == 0, 'Table row count mismatch')    
   end
 
   def test_benchmark_insert

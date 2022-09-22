@@ -4,25 +4,26 @@ module ActiveRecord
   module ConnectionAdapters
     module Cubrid2
       class ExplainPrettyPrinter # :nodoc:
-        # Pretty prints the result of an EXPLAIN in a way that resembles the output of the
-        # MySQL shell:
+        # Pretty prints the result of an query that resembles Cubrid shell:
         #
-        #   +----+-------------+-------+-------+---------------+---------+---------+-------+------+-------------+
-        #   | id | select_type | table | type  | possible_keys | key     | key_len | ref   | rows | Extra       |
-        #   +----+-------------+-------+-------+---------------+---------+---------+-------+------+-------------+
-        #   |  1 | SIMPLE      | users | const | PRIMARY       | PRIMARY | 4       | const |    1 |             |
-        #   |  1 | SIMPLE      | posts | ALL   | NULL          | NULL    | NULL    | NULL  |    1 | Using where |
-        #   +----+-------------+-------+-------+---------------+---------+---------+-------+------+-------------+
-        #   2 rows in set (0.00 sec)
+        #   Field                 Type                  Null                  Key                   Default               Extra
+        # ====================================================================================================================================
+        #   'host_year'           'INTEGER'             'NO'                  'PRI'                 NULL                  ''
+        #   'event_code'          'INTEGER'             'NO'                  'MUL'                 NULL                  ''
+        #   'athlete_code'        'INTEGER'             'NO'                  'MUL'                 NULL                  ''
+        #   'stadium_code'        'INTEGER'             'NO'                  ''                    NULL                  ''
+        #   'nation_code'         'CHAR(3)'             'YES'                 ''                    NULL                  ''
+        #   'medal'               'CHAR(1)'             'YES'                 ''                    NULL                  ''
+        #   'game_date'           'DATE'                'YES'                 ''                    NULL                  ''
         #
-        # This is an exercise in Ruby hyperrealism :).
+        # 7 rows selected. (0.010673 sec)
+        #
         def pp(result, elapsed)
-          widths    = compute_column_widths(result)
+          widths    = compute_column_widths(result) + 4
           separator = build_separator(widths)
 
           pp = []
 
-          pp << separator
           pp << build_cells(result.columns, widths)
           pp << separator
 
@@ -30,7 +31,6 @@ module ActiveRecord
             pp << build_cells(row, widths)
           end
 
-          pp << separator
           pp << build_footer(result.rows.length, elapsed)
 
           pp.join("\n") + "\n"
@@ -48,8 +48,7 @@ module ActiveRecord
         end
 
         def build_separator(widths)
-          padding = 1
-          '+' + widths.map { |w| '-' * (w + (padding * 2)) }.join('+') + '+'
+          '=' * widths
         end
 
         def build_cells(items, widths)
@@ -59,12 +58,12 @@ module ActiveRecord
             justifier = item.is_a?(Numeric) ? 'rjust' : 'ljust'
             cells << item.to_s.send(justifier, widths[i])
           end
-          '| ' + cells.join(' | ') + ' |'
+          '  ' + cells.join('  ') + '  '
         end
 
         def build_footer(nrows, elapsed)
           rows_label = nrows == 1 ? 'row' : 'rows'
-          "#{nrows} #{rows_label} in set (%.2f sec)" % elapsed
+          "#{nrows} #{rows_label} selected. (%.2f sec)" % elapsed
         end
       end
     end

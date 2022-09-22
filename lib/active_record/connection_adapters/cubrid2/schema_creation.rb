@@ -4,7 +4,6 @@ module ActiveRecord
   module ConnectionAdapters
     module Cubrid2
       class SchemaCreation < ActiveRecord::ConnectionAdapters::SchemaCreation # :nodoc:
-
         delegate :add_sql_comment!, to: :@conn, private: true
 
         private
@@ -27,10 +26,7 @@ module ActiveRecord
         end
 
         def add_column_options!(sql, options)
-          # By mysql's convention, if timestamp is null By default, To permit a TIMESTAMP
-          # column to contain NULL, explicitly declare it with the NULL attribute.
-          # See https://dev.mysql.com/doc/refman/5.7/en/timestamp-initialization.html
-          # In cubrid, strictly speaking it fllows system parameter 'return_null_on_function_errors'
+          # In cubrid, default value of timestamp follows system parameter 'return_null_on_function_errors'
           # if return_null_on_function_errors == 'no', timestamp null means error.
           # https://www.cubrid.org/manual/en/10.1/sql/datatype.html#date-time-type
           if /\Atimestamp\b/.match?(options[:column].sql_type) && !options[:primary_key] &&

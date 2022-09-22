@@ -16,8 +16,6 @@ module Cubrid2
       @query_options = self.class.default_query_options.dup
       @query_options.merge! opts
 
-      # initialize_ext
-
       %i[auto_commit].each do |key|
         next unless opts.key?(key)
 
@@ -36,7 +34,6 @@ module Cubrid2
       host     = opts[:host] || opts[:hostname]
       port     = opts[:port]
       database = opts[:database] || opts[:dbname] || opts[:db]
-      # socket   = opts[:socket] || opts[:sock]
 
       # Correct the data types before passing these values down to the C level
       user = user.to_s unless user.nil?
@@ -89,14 +86,6 @@ module Cubrid2
 
     def auto_commit=(flag)
       @conn.auto_commit = flag
-    end
-
-    class << self
-      private
-
-      def local_offset
-        ::Time.local(2010).utc_offset.to_r / 86_400
-      end
     end
   end
 end

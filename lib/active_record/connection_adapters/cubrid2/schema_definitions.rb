@@ -17,16 +17,10 @@ module ActiveRecord
 
         def new_column_definition(name, type, **options) # :nodoc:
           case type
-          when :virtual
-            type = options[:type]
           when :primary_key
             type = :integer
             options[:limit] ||= 8
             options[:primary_key] = true
-          when /\Aunsigned_(?<type>.+)\z/
-            # unsigned is ignored in cubrid
-            type = $~[:type].to_sym
-            options[:unsigned] = false
           end
 
           super

@@ -56,11 +56,11 @@ module ActiveRecord
       end
 
       def supports_comments_in_create?
-        true
+        supports_comments?
       end
 
       def supports_savepoints?
-        false
+        true
       end
 
       def supports_lazy_transactions?
