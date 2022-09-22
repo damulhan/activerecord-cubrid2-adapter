@@ -345,21 +345,21 @@ module ActiveRecord
       end
 
       def change_column(table_name, column_name, type, options = {}) # :nodoc:
-        execute("ALTER TABLE #{quote_table_name(table_name)} #{change_column_for_alter(table_name, column_name, type,
-                                                                                       options)}")
+        execute("ALTER TABLE #{quote_table_name(table_name)} #{change_column_for_alter(table_name, column_name, type, **options)}")
       end
 
       def rename_column(table_name, column_name, new_column_name) # :nodoc:
-        execute("ALTER TABLE #{quote_table_name(table_name)} #{rename_column_for_alter(table_name, column_name,
-                                                                                       new_column_name)}")
+        execute("ALTER TABLE #{quote_table_name(table_name)} #{rename_column_for_alter(table_name, column_name, new_column_name)}")
         rename_column_indexes(table_name, column_name, new_column_name)
       end
 
       def add_index(table_name, column_name, options = {}) # :nodoc:
-        index_name, index_type, index_columns, _, index_algorithm, index_using, comment = add_index_options(table_name,
-                                                                                                            column_name, **options)
-        sql = +"CREATE #{index_type} INDEX #{quote_column_name(index_name)} #{index_using} ON #{quote_table_name(table_name)} (#{index_columns}) #{index_algorithm}"
-        execute add_sql_comment!(sql, comment)
+        index, algorithm, if_not_exists = add_index_options(table_name, column_name, **options)
+
+        return if if_not_exists && index_exists?(table_name, column_name, name: index.name)
+
+        create_index = CreateIndexDefinition.new(index, algorithm)
+        execute schema_creation.accept(create_index)
       end
 
       def add_sql_comment!(sql, comment) # :nodoc:
@@ -634,30 +634,32 @@ module ActiveRecord
       end
 
       def rename_column_for_alter(table_name, column_name, new_column_name)
+        return rename_column_sql(table_name, column_name, new_column_name) if supports_rename_column?
+
         column  = column_for(table_name, column_name)
         options = {
           default: column.default,
           null: column.null,
-          auto_increment: column.auto_increment?
+          auto_increment: column.auto_increment?,
+          comment: column.comment
         }
 
-        current_type = exec_query("SHOW COLUMNS FROM #{quote_table_name(table_name)} LIKE #{quote(column_name)}",
-                                  'SCHEMA').first['Type']
+        current_type = exec_query("SHOW COLUMNS FROM #{quote_table_name(table_name)} LIKE #{quote(column_name)}", "SCHEMA").first["Type"]
         td = create_table_definition(table_name)
         cd = td.new_column_definition(new_column_name, current_type, **options)
         schema_creation.accept(ChangeColumnDefinition.new(cd, column.name))
       end
 
-      def add_index_for_alter(table_name, column_name, options = {})
-        index_name, index_type, index_columns, _, index_algorithm, index_using = add_index_options(table_name,
-                                                                                                   column_name, **options)
-        index_algorithm[0, 0] = ', ' if index_algorithm.present?
-        "CREATE #{index_type} INDEX #{quote_column_name(index_name)} #{index_using} (#{index_columns})#{index_algorithm}"
+      def add_index_for_alter(table_name, column_name, **options)
+        index, algorithm, _ = add_index_options(table_name, column_name, **options)
+        algorithm = ", #{algorithm}" if algorithm
+
+        "ADD #{schema_creation.accept(index)}#{algorithm}"
       end
 
-      def remove_index_for_alter(table_name, options = {})
-        index_name = index_name_for_remove(table_name, options)
-        "DROP INDEX #{quote_column_name(index_name)} ON #{quote_table_name(table_name)}"
+      def remove_index_for_alter(table_name, column_name = nil, **options)
+        index_name = index_name_for_remove(table_name, column_name, options)
+        "DROP INDEX #{quote_column_name(index_name)}"
       end
 
       def supports_rename_index?
