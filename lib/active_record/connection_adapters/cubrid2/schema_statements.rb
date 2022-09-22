@@ -211,8 +211,8 @@ module ActiveRecord
         end
 
         def extract_schema_qualified_name(string)
-          return [] if string.nil? 
-          
+          return [] if string.nil?
+
           q1 = '[`\"\[]'
           q2 = '[`\"\]]'
           schema, name = string.scan(/[^`"\[\].]+|#{q1}[^"]*#{q2}/)
