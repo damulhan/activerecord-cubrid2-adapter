@@ -23,7 +23,7 @@ class CUBRID_ActiveRecordTest < Test::Unit::TestCase
       host: 'localhost',
       username: 'dba',
       password: '',
-      database: 'demodb'
+      database: 'testdb'
     )
 
     @con = adapter.connection
