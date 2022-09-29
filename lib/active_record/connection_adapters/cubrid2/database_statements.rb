@@ -74,17 +74,21 @@ module ActiveRecord
 
         private
 
+        def is_conn_utf8?
+          charset == 'utf8' && collation =~ /^utf8/
+        end
+
         def _build_stmt_result(stmt)
           columns = stmt.column_info.map { |col| col['name'] }
-          rows = _extract_rows_from_stmt(stmt)
+          rows = is_conn_utf8? ? _extract_rows_from_stmt__utf8(stmt) : _extract_rows_from_stmt__raw(stmt)
           build_result(columns: columns, rows: rows)
         end
 
-        def _extract_rows_from_stmt(stmt, as_hash: false)
+        def _extract_rows_from_stmt__raw(stmt, as_hash: false)
           rows = []
           if as_hash
             while row = stmt.fetch_hash
-              rows << row.symbolize_keys
+              rows << row
             end
           else
             while row = stmt.fetch
@@ -92,6 +96,30 @@ module ActiveRecord
             end
           end
           rows
+        end
+
+        def _extract_rows_from_stmt__utf8(stmt, as_hash: false)
+          rows = []
+          if as_hash
+            while row = stmt.fetch_hash
+              rows << row.map do |x|
+                [x[0], _as_utf8(x[1])]
+              end.to_h
+            end
+          else
+            while row = stmt.fetch
+              rows << row.map { |x| _as_utf8(x) }
+            end
+          end
+          rows
+        end
+
+        def _as_utf8(val)
+          if val.is_a?(String)
+            val.force_encoding('UTF-8')
+          else
+            val
+          end
         end
 
         def _single_value_from_rows(rows)

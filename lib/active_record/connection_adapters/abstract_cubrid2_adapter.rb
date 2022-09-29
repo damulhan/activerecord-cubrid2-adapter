@@ -123,6 +123,10 @@ module ActiveRecord
         true
       end
 
+      def supports_rename_column?
+        true
+      end
+
       # In cubrid: locking is done automatically
       # See: https://www.cubrid.org/manual/en/11.2/sql/transaction.html#id13
       def get_advisory_lock(_lock_name, _timeout = 0) # :nodoc:
@@ -140,7 +144,7 @@ module ActiveRecord
       end
 
       def index_algorithms
-        { default: +'ALGORITHM = DEFAULT', copy: +'ALGORITHM = COPY', inplace: +'ALGORITHM = INPLACE' }
+        { }
       end
 
       # HELPER METHODS ===========================================
@@ -257,14 +261,16 @@ module ActiveRecord
 
       # Returns the database character set.
       def charset
-        # show_variable 'character_set_database'
-        ''
+        # check character set:
+        # See: https://www.cubrid.com/qna/3802763
+        @charset ||= query_value("select charset('ABC')", 'SCHEMA')
       end
 
       # Returns the database collation strategy.
       def collation
-        # show_variable 'collation_database'
-        ''
+        # check collation set:
+        # See: https://www.cubrid.com/qna/3802763
+        @collation ||= query_value("select collation('ABC')", 'SCHEMA')
       end
 
       def table_comment(table_name) # :nodoc:

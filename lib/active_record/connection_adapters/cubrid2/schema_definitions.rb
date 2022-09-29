@@ -8,7 +8,7 @@ module ActiveRecord
         included do
           define_column_methods :blob, :clob, :nchar
 
-          alias :char :nchar
+          alias_method :char, :nchar
         end
       end
 
@@ -40,6 +40,41 @@ module ActiveRecord
 
       class Table < ActiveRecord::ConnectionAdapters::Table
         include ColumnMethods
+      end
+
+      class IndexDefinition < ActiveRecord::ConnectionAdapters::IndexDefinition
+        attr_reader :null, :visible
+
+        def initialize(table, name, unique = false, columns = [], **options)
+          options.tap do |o|
+            o[:lengths] ||= {}
+            o[:orders] ||= {}
+            o[:opclasses] ||= {}
+          end
+
+          # get rise to error
+          @visible = options.delete(:visible)
+          @null = options.delete(:null)
+
+          super(table, name, unique, columns, **options)
+        end
+
+        def column_options
+          super.tap { |o|
+            o[:null] = @null
+            o[:visible] = @visible
+          }
+        end
+
+        private
+
+        def concise_options(options)
+          if columns.size == options.size && options.values.uniq.size == 1
+            options.values.first
+          else
+            options
+          end
+        end
       end
     end
   end

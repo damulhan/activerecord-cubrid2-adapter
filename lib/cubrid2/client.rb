@@ -1,5 +1,7 @@
 module Cubrid2
   class Client
+    delegate :new, :prepare, to: :@conn
+
     attr_reader :query_options, :read_timeout, :conn
 
     def self.default_query_options
@@ -69,7 +71,7 @@ module Cubrid2
     end
 
     def ping
-      @conn.server_version != ''
+      @conn.server_version.present?
     end
 
     def server_version

@@ -23,12 +23,14 @@ class CUBRID_ActiveRecordTest < Test::Unit::TestCase
       host: 'localhost',
       username: 'dba',
       password: '',
-      database: 'demodb'
+      database: 'hello'
     )
 
     @con = adapter.connection
 
     puts "-- cubrid server version: #{@con.server_version}"
+    puts "-- charset: #{@con.charset}"
+    puts "-- collation: #{@con.collation}"
 
     ActiveRecord::Base.connection.drop_table TABLE_NAME if ActiveRecord::Base.connection.table_exists?(TABLE_NAME)
 
@@ -60,12 +62,18 @@ class CUBRID_ActiveRecordTest < Test::Unit::TestCase
     test1 = CubridTest.create!(name: 'test1', body: 'test1')
     puts "inserted id: #{test1.id}"
 
-    test2 = CubridTest.create!(name: 'test2', body: 'test2')
+    test2 = CubridTest.create!(name: 'test2', body: '한글2')
     puts "inserted id: #{test2.id}"
 
-    test3 = CubridTest.create!(name: 'test3', body: 'test3')
+    test3 = CubridTest.create!(name: 'test3', body: '中文3')
     puts "inserted id: #{test3.id}"
-
+    
+    test2_1 = CubridTest.where("name = 'test2'").first
+    pp test2_1
+    
+    test3_1 = CubridTest.where("name = 'test3'").first
+    pp test3_1
+    
     assert(CubridTest.count == (cnt + 4), 'Table row count mismatch')
 
     CubridTest.destroy_all
@@ -76,7 +84,7 @@ class CUBRID_ActiveRecordTest < Test::Unit::TestCase
   def test_benchmark_insert
     puts '### test_benchmark_insert'
 
-    @max_insert = 100
+    @max_insert = 10
 
     count1 = CubridTest.count
 

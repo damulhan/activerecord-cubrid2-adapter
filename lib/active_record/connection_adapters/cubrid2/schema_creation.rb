@@ -12,6 +12,10 @@ module ActiveRecord
         #   "DROP FOREIGN KEY #{name}"
         # end
 
+        def visit_DropCheckConstraint(name)
+          "DROP CONSTRAINT #{name}"
+        end
+
         def visit_AddColumnDefinition(o)
           add_column_position!(super, column_options(o.column))
         end
@@ -19,6 +23,25 @@ module ActiveRecord
         def visit_ChangeColumnDefinition(o)
           change_column_sql = +"CHANGE #{quote_column_name(o.name)} #{accept(o.column)}"
           add_column_position!(change_column_sql, column_options(o.column))
+        end
+
+        def visit_CreateIndexDefinition(o)
+          sql = visit_IndexDefinition(o.index, true)
+          sql
+        end
+
+        def visit_IndexDefinition(o, create = false)
+          index_type = o.type&.to_s&.upcase || o.unique && "UNIQUE"
+
+          sql = create ? ["CREATE"] : []
+          sql << index_type if index_type
+          sql << "INDEX"
+          sql << quote_column_name(o.name)
+          #sql << "USING #{o.using}" if o.using
+          sql << "ON #{quote_table_name(o.table)}" if create
+          sql << "(#{quoted_columns(o)})"
+
+          add_sql_comment!(sql.join(" "), o.comment)
         end
 
         def add_table_options!(create_sql, options)
@@ -60,12 +83,22 @@ module ActiveRecord
         end
 
         def index_in_create(table_name, column_name, options)
-          index_name, index_type, index_columns, _, _, index_using, comment =
-            @conn.add_index_options(table_name, column_name, **options)
+          index_def, algorithm, if_not_exists = @conn.add_index_options(table_name, column_name, **options)
+          index_name = index_def.name
+          index_columns = index_def.columns.map { |x| quote_column_name(x) }.join(', ')
+          index_type = index_def.unique ? 'UNIQUE' : ''
+          comment = index_def.comment
           add_sql_comment!(
-            +"#{index_type} INDEX #{quote_column_name(index_name)} #{index_using} (#{index_columns})", comment
+            +"#{index_type} INDEX #{quote_column_name(index_name)} (#{index_columns})", comment
           )
         end
+        # def index_in_create(table_name, column_name, options)
+        #   index_name, index_type, index_columns, _, _, index_using, comment =
+        #     @conn.add_index_options(table_name, column_name, **options)
+        #   add_sql_comment!(
+        #     +"#{index_type} INDEX #{quote_column_name(index_name)} #{index_using} (#{index_columns})", comment
+        #   )
+        # end
       end
     end
   end

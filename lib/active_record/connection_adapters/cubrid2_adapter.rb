@@ -120,7 +120,7 @@ module ActiveRecord
 
       def discard! # :nodoc:
         super
-        @connection.automatic_close = false
+        #@connection.automatic_close = false
         @connection = nil
       end
 
