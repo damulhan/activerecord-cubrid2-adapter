@@ -4,7 +4,7 @@ Cubrid database connector for ruby, and active_record, depends on 'cubrid' gem
 DESCRIPTION
 -----------
 
-Cubrid2 ActiveRecord adapter privides Cubrid database from Ruby on Rails applications. Now works with Ruby on Rails 6.0 and it is working Cubrid database versions 9.x to higher. 
+Cubrid2 ActiveRecord adapter privides Cubrid database from Ruby on Rails applications. Now works with Ruby on Rails 6.0 and it is working with Cubrid database versions 9.x to higher. 
 
 INSTALLATION
 ------------
@@ -35,7 +35,7 @@ In Rails application `config/database.yml` use 'cubrid2' as adapter name, e.g.
 development:
   adapter: cubrid2
   host: localhost
-  database: demodb
+  database: testdb
   username: user
   password: secret
 ```
