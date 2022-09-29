@@ -106,6 +106,8 @@ module ActiveRecord
           case type.to_s
           when 'integer'
             integer_to_sql(limit)
+          when 'serial'
+            integer_to_sql(8) #bigint
           when 'float', 'real', 'double', 'double precision'
             float_to_sql(limit)
           when 'text', 'string', 'varchar', 'char varing'
