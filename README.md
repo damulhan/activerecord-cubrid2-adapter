@@ -50,6 +50,7 @@ LINKS
 -----
 
 * Source code: https://github.com/damulhan/activerecord-cubrid2-adapter
+* Active Record – Object-relational mapping in Rails: https://github.com/rails/rails/tree/main/activerecord 
 * Cubrid Ruby GEM: https://github.com/CUBRID/cubrid-ruby 
 * Cubrid Homepage: https://www.cubrid.org
 
