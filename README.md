@@ -14,7 +14,7 @@ INSTALLATION
 gem 'cubrid' # cubrid interface gem, based on native CCI C interface 
 gem 'activerecord-cubrid2-adapter'
 ```
-Currently Rails <6.0, >=7.0, Windows, JRuby is not testes.
+Currently Rails <6.0, >=7.0, Windows, JRuby is not tested.
 
 ### Without Rails and Bundler
 
