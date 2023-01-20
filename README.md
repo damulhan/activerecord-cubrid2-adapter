@@ -12,19 +12,17 @@ INSTALLATION
 ```ruby
 # Use cubrid as the database for Active Record
 gem 'cubrid' # cubrid interface gem, based on native CCI C interface
-# gem 'cubrid', path: '/opt/cubrid/cubrid-ruby' # git clone https://github.com/CUBRID/cubrid-ruby.git
+
+# OR use local build
+# git clone https://github.com/CUBRID/cubrid-ruby.git /opt/cubrid/cubrid-ruby
+# cd /opt/cubrid/cubrid-ruby
+# # goto directory and build cubrid-ruby
+
+# gem 'cubrid', path: '/opt/cubrid/cubrid-ruby'
 
 gem 'activerecord-cubrid2-adapter'
 ```
 Currently Rails <6.0, >=7.0, Windows, JRuby is not tested.
-
-BUILD
-------------
-
-```ruby
-gem install rake-compiler
-rake build
-```
 
 ### Without Rails and Bundler
 
@@ -32,6 +30,14 @@ If you want to use ActiveRecord and Cubrid2 adapter without Rails and Bundler th
 
 ```bash
 gem install activerecord-cubrid2-adapter
+```
+
+BUILD
+-----
+
+```ruby
+gem install rake-compiler
+rake build
 ```
 
 USAGE
@@ -51,10 +57,9 @@ development:
 ```
 
 EXAMPLE
--------------
+-----
 
 Check test_activerecord.rb in the tests directory.
-
 
 LINKS
 -----
