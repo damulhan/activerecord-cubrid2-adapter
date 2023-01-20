@@ -1,10 +1,11 @@
 source 'https://rubygems.org'
 
-# I cloned from original cubrid-ruby git repository to test
-# git clone https://github.com/CUBRID/cubrid-ruby.git
-gem 'cubrid', path: '/opt/cubrid/cubrid-ruby'
-
-gem 'activerecord', '~> 6.0'
-gem 'activerecord-cubrid2-adapter', path: '../'
 gem 'test-unit'
+gem 'activerecord', '~> 6.0'
 
+#gem 'cubrid'
+#gem 'cubrid', path: '/opt/cubrid/cubrid-ruby'
+gem 'cubrid', github: 'CUBRID/cubrid-ruby'
+
+#gem 'activerecord-cubrid2-adapter', path: '../'
+gem 'activerecord-cubrid2-adapter'
