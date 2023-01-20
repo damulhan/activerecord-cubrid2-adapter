@@ -1,0 +1,61 @@
+Loaded suite test_activerecord
+Started
+### setup 
+-- activerecord-cubrid2-adapter version: 0.0.1
+-- cubrid server version: 11.2.2.0705
+-- charset: utf8
+-- collation: utf8_bin
+### test_benchmark_insert
+       user     system      total        real
+ 1th test
+inserted id: 1
+2th test
+inserted id: 2
+3th test
+inserted id: 3
+4th test
+inserted id: 4
+5th test
+inserted id: 5
+6th test
+inserted id: 6
+7th test
+inserted id: 7
+8th test
+inserted id: 8
+9th test
+inserted id: 9
+10th test
+inserted id: 10
+  0.014243   0.002685   0.016928 (  0.074481)
+### 10 rows inserted
+### teardown 
+.### setup 
+-- activerecord-cubrid2-adapter version: 0.0.1
+-- cubrid server version: 11.2.2.0705
+-- charset: utf8
+-- collation: utf8_bin
+### test_insert
+inserted id: 2
+inserted id: 3
+inserted id: 4
+#<CubridTest:0x00007fdced0cdbf0
+ id: 3,
+ name: "test2",
+ body: "한글2",
+ created_at: 2023-01-20 11:19:29 UTC,
+ updated_at: 2023-01-20 11:19:29 UTC>
+#<CubridTest:0x00007fdcf05901f8
+ id: 4,
+ name: "test3",
+ body: "中文3",
+ created_at: 2023-01-20 11:19:29 UTC,
+ updated_at: 2023-01-20 11:19:29 UTC>
+### teardown 
+.
+Finished in 0.266551841 seconds.
+-------------------------------------------------------------------------------
+2 tests, 5 assertions, 0 failures, 0 errors, 0 pendings, 0 omissions, 0 notifications
+100% passed
+-------------------------------------------------------------------------------
+7.50 tests/s, 18.76 assertions/s
