@@ -4,17 +4,27 @@ Cubrid database connector for ruby, and active_record, depends on 'cubrid' gem
 DESCRIPTION
 -----------
 
-Cubrid2 ActiveRecord adapter privides Cubrid database from Ruby on Rails applications. Now works with Ruby on Rails 6.0 and it is working with Cubrid database versions 9.x to higher. 
+Cubrid2 ActiveRecord adapter privides Cubrid database from Ruby on Rails applications. Now works with Ruby on Rails 6.0 and it is working with Cubrid database versions 9.x to higher.
 
 INSTALLATION
 ------------
 
 ```ruby
 # Use cubrid as the database for Active Record
-gem 'cubrid' # cubrid interface gem, based on native CCI C interface 
+gem 'cubrid' # cubrid interface gem, based on native CCI C interface
+# gem 'cubrid', path: '/opt/cubrid/cubrid-ruby' # git clone https://github.com/CUBRID/cubrid-ruby.git
+
 gem 'activerecord-cubrid2-adapter'
 ```
 Currently Rails <6.0, >=7.0, Windows, JRuby is not tested.
+
+BUILD
+------------
+
+```ruby
+gem install rake-compiler
+rake build
+```
 
 ### Without Rails and Bundler
 
@@ -50,7 +60,7 @@ LINKS
 -----
 
 * Source code: https://github.com/damulhan/activerecord-cubrid2-adapter
-* Active Record – Object-relational mapping in Rails: https://github.com/rails/rails/tree/main/activerecord 
-* Cubrid Ruby GEM: https://github.com/CUBRID/cubrid-ruby 
+* Active Record – Object-relational mapping in Rails: https://github.com/rails/rails/tree/main/activerecord
+* Cubrid Ruby GEM: https://github.com/CUBRID/cubrid-ruby
 * Cubrid Homepage: https://www.cubrid.org
 

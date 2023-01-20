@@ -1,5 +1,10 @@
 source 'https://rubygems.org'
 
+# I cloned from original cubrid-ruby git repository to test
+# git clone https://github.com/CUBRID/cubrid-ruby.git
+gem 'cubrid', path: '/opt/cubrid/cubrid-ruby'
+
 gem 'activerecord', '~> 6.0'
 gem 'activerecord-cubrid2-adapter', path: '../'
 gem 'test-unit'
+
