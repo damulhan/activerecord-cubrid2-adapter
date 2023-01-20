@@ -38,6 +38,10 @@ BUILD
 ```ruby
 gem install rake-compiler
 rake build
+
+OR
+
+gem build activerecord-cubrid2-adapter.gemspec
 ```
 
 USAGE
