@@ -35,11 +35,11 @@ gem install activerecord-cubrid2-adapter
 BUILD
 -----
 
-```ruby
+```bash
 gem install rake-compiler
 rake build
 
-OR
+# OR
 
 gem build activerecord-cubrid2-adapter.gemspec
 ```
