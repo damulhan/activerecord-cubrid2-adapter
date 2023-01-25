@@ -32,21 +32,6 @@ If you want to use ActiveRecord and Cubrid2 adapter without Rails and Bundler th
 gem install activerecord-cubrid2-adapter
 ```
 
-BUILD
------
-
-```bash
-gem install rake-compiler
-rake build
-
-# OR
-
-gem build activerecord-cubrid2-adapter.gemspec
-```
-
-USAGE
------
-
 ### Database connection
 
 In Rails application `config/database.yml` use 'cubrid2' as adapter name, e.g.
@@ -65,10 +50,22 @@ EXAMPLE
 
 Check test_activerecord.rb in the tests directory.
 
+
+BUILDING GEM
+-----
+
+```bash
+gem install rake-compiler
+rake build
+
+# OR
+
+gem build activerecord-cubrid2-adapter.gemspec
+```
+
 LINKS
 -----
 
-* Source code: https://github.com/damulhan/activerecord-cubrid2-adapter
 * Active Record – Object-relational mapping in Rails: https://github.com/rails/rails/tree/main/activerecord
 * Cubrid Ruby GEM: https://github.com/CUBRID/cubrid-ruby
 * Cubrid Homepage: https://www.cubrid.org
