@@ -16,11 +16,9 @@ module ActiveRecord
       client = Cubrid2::Client.new(config)
       ConnectionAdapters::Cubrid2Adapter.new(client, logger, nil, config)
     rescue Cubrid2::Error => e
-      if e.error_number == ER_DATABASE_CONNECTION_ERROR
-        raise ActiveRecord::NoDatabaseError
-      else
-        raise
-      end
+      raise ActiveRecord::NoDatabaseError if e.error_number == ER_DATABASE_CONNECTION_ERROR
+
+      raise
     end
   end
 
@@ -72,7 +70,7 @@ module ActiveRecord
         stmt = result.is_a?(Array) ? result.first : result
         if block_given?
           if result && stmt
-            while row = stmt.fetch_hash
+            while (row = stmt.fetch_hash)
               yield row.symbolize_keys
             end
           end
@@ -92,8 +90,7 @@ module ActiveRecord
       def quote_string(string)
         # escaping with backslash is only allowed when 'no_backslash_escapes' == 'yes' in cubrid config, default is yes.
         # See: https://www.cubrid.org/manual/ko/11.2/sql/literal.html#id5
-        # "'#{string.gsub("'", "''")}'"
-        string
+        "#{string.gsub("'", "''")}"
       end
 
       #--
@@ -120,7 +117,7 @@ module ActiveRecord
 
       def discard! # :nodoc:
         super
-        #@connection.automatic_close = false
+        # @connection.automatic_close = false
         @connection = nil
       end
 

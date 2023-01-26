@@ -127,7 +127,8 @@ module ActiveRecord
         end
 
         def execute_batch(statements, name = nil)
-          combine_multi_statements(statements).each do |statement|
+          # ss = combine_multi_statements(statements)
+          statements.each do |statement|
             execute(statement, name)
           end
         end
