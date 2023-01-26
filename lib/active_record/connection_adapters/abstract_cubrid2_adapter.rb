@@ -326,7 +326,12 @@ module ActiveRecord
         if supports_rename_index?
           validate_index_length!(table_name, new_name)
 
-          execute "ALTER TABLE #{quote_table_name(table_name)} RENAME INDEX #{quote_table_name(old_name)} TO #{quote_table_name(new_name)}"
+          # NOTE: Renaming table index SQL would not work.
+          # See: https://www.cubrid.org/manual/ko/10.2/sql/schema/index_stmt.html#alter-index
+          #      https://www.cubrid.com/index.php?mid=qna&document_srl=3802148
+          _query = "ALTER INDEX #{quote_table_name(old_name)} ON #{quote_table_name(table_name)} RENAME TO #{quote_table_name(new_name)}"
+          puts "Warning: renaming index not work as manual. Ignoring: #{_query}"
+          #execute _query
         else
           super
         end

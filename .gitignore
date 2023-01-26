@@ -17,3 +17,4 @@ tests/test_cubrid3.rb
 tests/test_mysql.rb
 tests/test_pg.rb
 
+activerecord-cubrid2-adapter-*.gem
