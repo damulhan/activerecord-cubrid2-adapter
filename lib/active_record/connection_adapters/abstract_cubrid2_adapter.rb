@@ -144,7 +144,7 @@ module ActiveRecord
       end
 
       def index_algorithms
-        { }
+        {}
       end
 
       # HELPER METHODS ===========================================
@@ -176,10 +176,10 @@ module ActiveRecord
 
       # CONNECTION MANAGEMENT ====================================
 
-      def clear_cache! # :nodoc:
-        reload_type_map
-        super
-      end
+      # def clear_cache! # :nodoc:
+      #   reload_type_map
+      #   super
+      # end
 
       #--
       # DATABASE STATEMENTS ======================================
@@ -351,11 +351,13 @@ module ActiveRecord
       end
 
       def change_column(table_name, column_name, type, options = {}) # :nodoc:
-        execute("ALTER TABLE #{quote_table_name(table_name)} #{change_column_for_alter(table_name, column_name, type, **options)}")
+        execute("ALTER TABLE #{quote_table_name(table_name)} #{change_column_for_alter(table_name, column_name, type,
+                                                                                       **options)}")
       end
 
       def rename_column(table_name, column_name, new_column_name) # :nodoc:
-        execute("ALTER TABLE #{quote_table_name(table_name)} #{rename_column_for_alter(table_name, column_name, new_column_name)}")
+        execute("ALTER TABLE #{quote_table_name(table_name)} #{rename_column_for_alter(table_name, column_name,
+                                                                                       new_column_name)}")
         rename_column_indexes(table_name, column_name, new_column_name)
       end
 
@@ -520,9 +522,9 @@ module ActiveRecord
       end
 
       def check_version # :nodoc:
-        if database_version < '9.0'
-          raise "Your version of Cubrid (#{database_version}) is too old. Active Record supports Cubrid >= 9.0."
-        end
+        return unless database_version < '9.0'
+
+        raise "Your version of Cubrid (#{database_version}) is too old. Active Record supports Cubrid >= 9.0."
       end
 
       private
@@ -650,14 +652,15 @@ module ActiveRecord
           comment: column.comment
         }
 
-        current_type = exec_query("SHOW COLUMNS FROM #{quote_table_name(table_name)} LIKE #{quote(column_name)}", "SCHEMA").first["Type"]
+        current_type = exec_query("SHOW COLUMNS FROM #{quote_table_name(table_name)} LIKE #{quote(column_name)}",
+                                  'SCHEMA').first['Type']
         td = create_table_definition(table_name)
         cd = td.new_column_definition(new_column_name, current_type, **options)
         schema_creation.accept(ChangeColumnDefinition.new(cd, column.name))
       end
 
       def add_index_for_alter(table_name, column_name, **options)
-        index, algorithm, _ = add_index_options(table_name, column_name, **options)
+        index, algorithm, = add_index_options(table_name, column_name, **options)
         algorithm = ", #{algorithm}" if algorithm
 
         "ADD #{schema_creation.accept(index)}#{algorithm}"

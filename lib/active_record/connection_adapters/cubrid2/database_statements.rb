@@ -43,9 +43,8 @@ module ActiveRecord
 
           # make sure we carry over any changes to ActiveRecord::Base.default_timezone that have been
           # made since we established the connection
-          @connection.query_options[:database_timezone] = ActiveRecord::Base.default_timezone
+          # @connection.query_options[:database_timezone] = ActiveRecord::Base.default_timezone
           # @connection.query_options[:database_timezone] = ActiveRecord.default_timezone
-
           super
         end
 
@@ -87,11 +86,11 @@ module ActiveRecord
         def _extract_rows_from_stmt__raw(stmt, as_hash: false)
           rows = []
           if as_hash
-            while row = stmt.fetch_hash
+            while (row = stmt.fetch_hash)
               rows << row
             end
           else
-            while row = stmt.fetch
+            while (row = stmt.fetch)
               rows << row
             end
           end
@@ -101,13 +100,13 @@ module ActiveRecord
         def _extract_rows_from_stmt__utf8(stmt, as_hash: false)
           rows = []
           if as_hash
-            while row = stmt.fetch_hash
+            while (row = stmt.fetch_hash)
               rows << row.map do |x|
                 [x[0], _as_utf8(x[1])]
               end.to_h
             end
           else
-            while row = stmt.fetch
+            while (row = stmt.fetch)
               rows << row.map { |x| _as_utf8(x) }
             end
           end

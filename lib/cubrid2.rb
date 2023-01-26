@@ -4,30 +4,30 @@ require 'bigdecimal'
 # Load libcubrid.dll before requiring cubrid/cubrid.so
 # This gives a chance to be flexible about the load path
 # Or to bomb out with a clear error message instead of a linker crash
-if RUBY_PLATFORM =~ /mswin|mingw/
-  dll_path = if ENV['RUBY_CUBRID_LIBCUBRID_DLL']
-               # If this environment variable is set, it overrides any other paths
-               # The user is advised to use backslashes not forward slashes
-               ENV['RUBY_CUBRID_LIBCUBRID_DLL']
-             elsif File.exist?(File.expand_path('../vendor/libcubrid.dll', File.dirname(__FILE__)))
-               # Use vendor/libcubrid.dll if it exists, convert slashes for Win32 LoadLibrary
-               File.expand_path('../vendor/libcubrid.dll', File.dirname(__FILE__))
-               # elsif defined?(RubyInstaller)
-               # RubyInstaller-2.4+ native build doesn't need DLL preloading
-               # else
-               # This will use default / system library paths
-               '../vendor/libcubrid.dll'
-             end
+# if RUBY_PLATFORM =~ /mswin|mingw/
+#   dll_path = if ENV['RUBY_CUBRID_LIBCUBRID_DLL']
+#                # If this environment variable is set, it overrides any other paths
+#                # The user is advised to use backslashes not forward slashes
+#                ENV['RUBY_CUBRID_LIBCUBRID_DLL']
+#              elsif File.exist?(File.expand_path('../vendor/libcubrid.dll', File.dirname(__FILE__)))
+#                # Use vendor/libcubrid.dll if it exists, convert slashes for Win32 LoadLibrary
+#                File.expand_path('../vendor/libcubrid.dll', File.dirname(__FILE__))
+#                # elsif defined?(RubyInstaller)
+#                # RubyInstaller-2.4+ native build doesn't need DLL preloading
+#                # else
+#                # This will use default / system library paths
+#                '../vendor/libcubrid.dll'
+#              end
 
-  if dll_path
-    require 'fiddle'
-    kernel32 = Fiddle.dlopen 'kernel32'
-    load_library = Fiddle::Function.new(
-      kernel32['LoadLibraryW'], [Fiddle::TYPE_VOIDP], Fiddle::TYPE_INT
-    )
-    abort "Failed to load libcubrid.dll from #{dll_path}" if load_library.call(dll_path.encode('utf-16le')).zero?
-  end
-end
+#   if dll_path
+#     require 'fiddle'
+#     kernel32 = Fiddle.dlopen 'kernel32'
+#     load_library = Fiddle::Function.new(
+#       kernel32['LoadLibraryW'], [Fiddle::TYPE_VOIDP], Fiddle::TYPE_INT
+#     )
+#     abort "Failed to load libcubrid.dll from #{dll_path}" if load_library.call(dll_path.encode('utf-16le')).zero?
+#   end
+# end
 
 # load c extension
 gem 'cubrid', '>= 10.0'
