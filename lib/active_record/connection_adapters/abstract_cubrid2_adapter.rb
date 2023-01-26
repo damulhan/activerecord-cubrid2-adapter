@@ -331,7 +331,7 @@ module ActiveRecord
           #      https://www.cubrid.com/index.php?mid=qna&document_srl=3802148
           _query = "ALTER INDEX #{quote_table_name(old_name)} ON #{quote_table_name(table_name)} RENAME TO #{quote_table_name(new_name)}"
           puts "Warning: renaming index not work as manual. Ignoring: #{_query}"
-          #execute _query
+          # execute _query
         else
           super
         end
