@@ -199,6 +199,8 @@ module ActiveRecord
         materialize_transactions
 
         stmt = nil
+
+        #pp "######### #{sql}"
         log(sql, name) do
           ActiveSupport::Dependencies.interlock.permit_concurrent_loads do
             stmt = @connection.query(sql)

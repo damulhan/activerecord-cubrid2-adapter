@@ -55,7 +55,7 @@ module ActiveRecord
           indexes.map do |index|
             options = index.pop
 
-            if expressions = options.delete(:expressions)
+            if (expressions = options.delete(:expressions))
               orders = options.delete(:orders)
               lengths = options.delete(:lengths)
 
@@ -101,13 +101,13 @@ module ActiveRecord
         def type_to_sql(type, limit: nil,
                         precision: nil, scale: nil,
                         size: limit_to_size(limit, type),
-                        unsigned: nil, **)
+                        unsigned: nil, **options)
 
           case type.to_s
           when 'integer'
             integer_to_sql(limit)
           when 'serial'
-            integer_to_sql(8) #bigint
+            integer_to_sql(8) # bigint
           when 'float', 'real', 'double', 'double precision'
             float_to_sql(limit)
           when 'text', 'string', 'varchar', 'char varing'
@@ -118,6 +118,8 @@ module ActiveRecord
             type_with_size_to_sql('blob', size)
           when 'clob'
             type_with_size_to_sql('clob', size)
+          when 'boolean'
+            type_with_size_to_sql('boolean', size)
           when 'nchar', 'nchar varing'
             raise 'Not supported from cubrid 9.0'
           else
@@ -235,6 +237,8 @@ module ActiveRecord
             'blob'
           when 'clob'
             'clob'
+          when 'boolean'
+            'smallint'
           end
         end
 

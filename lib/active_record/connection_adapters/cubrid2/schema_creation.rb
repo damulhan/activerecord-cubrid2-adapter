@@ -38,8 +38,7 @@ module ActiveRecord
           sql << quote_column_name(o.name)
           # sql << "USING #{o.using}" if o.using
           sql << "ON #{quote_table_name(o.table)}" if create
-          sql << "(#{quoted_columns(o)})"
-
+          sql << "(" + o.columns.map { |c| quote_column_name(c) }.join(', ') +")"
           add_sql_comment!(sql.join(' '), o.comment)
         end
 
@@ -95,7 +94,6 @@ module ActiveRecord
             index_name, index_type, index_columns, _, _, index_using, comment =
                                                         @conn.add_index_options(table_name, column_name, **options)
           end
-
           add_sql_comment!(+"#{index_type} INDEX #{quote_column_name(index_name)} (#{index_columns})", comment)
         end
       end
