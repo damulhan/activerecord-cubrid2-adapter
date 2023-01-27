@@ -80,7 +80,10 @@ module ActiveRecord
         def _build_stmt_result(stmt)
           columns = stmt.column_info.map { |col| col['name'] }
           rows = is_conn_utf8? ? _extract_rows_from_stmt__utf8(stmt) : _extract_rows_from_stmt__raw(stmt)
-          build_result(columns: columns, rows: rows)
+
+          # build_result(columns: columns, rows: rows)
+          # for activerecord <= 6.0
+          ActiveRecord::Result.new(columns, rows, column_types = {})
         end
 
         def _extract_rows_from_stmt__raw(stmt, as_hash: false)
