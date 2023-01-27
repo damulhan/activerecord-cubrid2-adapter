@@ -199,7 +199,6 @@ module ActiveRecord
         materialize_transactions
 
         stmt = nil
-
         log(sql, name) do
           ActiveSupport::Dependencies.interlock.permit_concurrent_loads do
             stmt = @connection.query(sql)
@@ -282,7 +281,7 @@ module ActiveRecord
           WHERE owner_name = 'PUBLIC'
             AND class_type = 'CLASS'
             AND is_system_class = 'NO'
-            AND class_name = #{quote_table_name(table_name)}
+            AND class_name = #{quote(table_name)}
         SQL
       end
 
@@ -547,6 +546,7 @@ module ActiveRecord
         register_integer_type m, /^bigint/i,    limit: 8
         register_integer_type m, /^int/i,       limit: 4
         register_integer_type m, /^smallint/i,  limit: 2
+        register_integer_type m, /^short/i, limit: 2
 
         m.register_type(/^smallint\(1\)/i, Type::Boolean.new) if emulate_booleans
         m.alias_type(/year/i,          'integer')

@@ -4,6 +4,15 @@ module ActiveRecord
   module ConnectionAdapters
     module Cubrid2
       module Quoting # :nodoc:
+        def quote(value) # :nodoc:
+          case value
+          when ActiveRecord::ConnectionAdapters::ColumnDefinition
+            quote(value.name)
+          else
+            super
+          end
+        end
+
         # def quote_string(s)
         #   super
         # end
@@ -13,7 +22,7 @@ module ActiveRecord
         end
 
         def quote_table_name(name)
-          self.class.quoted_table_names[name] ||= super.gsub(".", "`.`").freeze
+          self.class.quoted_table_names[name] ||= super.gsub('.', '`.`').freeze
         end
 
         # def quote_table_name(name) # :nodoc:
@@ -32,11 +41,11 @@ module ActiveRecord
         end
 
         # Quotes column names for use in SQL queries.
-        #def quote_column_name(name) # :nodoc:
-          #self.class.quoted_column_names[name] ||= quote(super).freeze
-          #pp "## quote_column_name: #{name}"
-          #self.class.quoted_column_names[name] ||= quote_string(name).freeze
-        #end
+        # def quote_column_name(name) # :nodoc:
+        # self.class.quoted_column_names[name] ||= quote(super).freeze
+        # pp "## quote_column_name: #{name}"
+        # self.class.quoted_column_names[name] ||= quote_string(name).freeze
+        # end
 
         # def visit_Arel_Attributes_Attribute(o, collector)
         #   join_name = o.relation.table_alias || o.relation.name
