@@ -186,9 +186,9 @@ module ActiveRecord
       #++
 
       def explain(arel, binds = [])
-        sql     = "EXPLAIN #{to_sql(arel, binds)}"
-        start   = Concurrent.monotonic_time
-        result  = exec_query(sql, 'EXPLAIN', binds)
+        sql = "EXPLAIN #{to_sql(arel, binds)}"
+        start = Concurrent.monotonic_time
+        result = exec_query(sql, 'EXPLAIN', binds)
         elapsed = Concurrent.monotonic_time - start
 
         Cubrid2::ExplainPrettyPrinter.new.pp(result, elapsed)
@@ -248,17 +248,17 @@ module ActiveRecord
       end
 
       # Create a new Cubrid database
-      # TODO: not workign with rake db:create 
+      # TODO: not workign with rake db:create
       def create_database(name, options = {})
         options[:db_volume_size] ||= '20' # megabytes
         options[:log_volume_size] ||= '20' # megabytes
         options[:encoding] ||= 'en_US.utf8'
 
         Kernel.exec 'cubrid createdb ' +
-             "--db-volume-size=#{options[:db_volume_size]}M " +
-             "--log-volume-size=#{options[:log_volume_size]}M #{name} " +
-             "#{options[:encoding]}"
-        
+                    "--db-volume-size=#{options[:db_volume_size]}M " +
+                    "--log-volume-size=#{options[:log_volume_size]}M #{name} " +
+                    "#{options[:encoding]}"
+
         Kernel.exec "cubrid service start #{name}"
       end
 
@@ -266,7 +266,7 @@ module ActiveRecord
       # TODO: not workign with rake db:drop
       def drop_database(name)
         Kernel.exec "cubrid service stop #{name}"
-        Kernel.exec "cubrid deletedb #{name}"        
+        Kernel.exec "cubrid deletedb #{name}"
       end
 
       def current_database
@@ -517,6 +517,7 @@ module ActiveRecord
       def can_perform_case_insensitive_comparison_for?(column)
         column.case_sensitive?
       end
+
       private :can_perform_case_insensitive_comparison_for?
 
       def columns_for_distinct(columns, orders) # :nodoc:
@@ -565,19 +566,19 @@ module ActiveRecord
 
         register_class_with_limit m, /char/i, CubridString
 
-        m.register_type(/blob/i,       Type::Binary.new(limit: 2**30 - 1))
-        m.register_type(/clob/i,       Type::Binary.new(limit: 2**30 - 1))
-        m.register_type(/^float/i,     Type::Float.new(limit: 24))
-        m.register_type(/^double/i,    Type::Float.new(limit: 53))
+        m.register_type(/blob/i, Type::Binary.new(limit: 2**30 - 1))
+        m.register_type(/clob/i, Type::Binary.new(limit: 2**30 - 1))
+        m.register_type(/^float/i, Type::Float.new(limit: 24))
+        m.register_type(/^double/i, Type::Float.new(limit: 53))
 
-        register_integer_type m, /^bigint/i,    limit: 8
-        register_integer_type m, /^int/i,       limit: 4
-        register_integer_type m, /^smallint/i,  limit: 2
+        register_integer_type m, /^bigint/i, limit: 8
+        register_integer_type m, /^int/i, limit: 4
+        register_integer_type m, /^smallint/i, limit: 2
         register_integer_type m, /^short/i, limit: 2
 
         m.register_type(/^smallint\(1\)/i, Type::Boolean.new) if emulate_booleans
-        m.alias_type(/year/i,          'integer')
-        m.alias_type(/bit/i,           'binary')
+        m.alias_type(/year/i, 'integer')
+        m.alias_type(/bit/i, 'binary')
 
         m.register_type(/enum/i) do |sql_type|
           limit = sql_type[/^enum\s*\((.+)\)/i, 1]
@@ -614,20 +615,20 @@ module ActiveRecord
 
       # See https://www.cubrid.com/tutorial/3793681
       # ER_FILSORT_ABORT        = 1028
-      ER_DUP_ENTRY            = 212
-      ER_NOT_NULL_VIOLATION   = 631
+      ER_DUP_ENTRY = 212
+      ER_NOT_NULL_VIOLATION = 631
       # ER_NO_REFERENCED_ROW    = 1216
       # ER_ROW_IS_REFERENCED    = 1217
-      ER_DO_NOT_HAVE_DEFAULT  = 1364
+      ER_DO_NOT_HAVE_DEFAULT = 1364
       # ER_ROW_IS_REFERENCED_2  = 1451
       # ER_NO_REFERENCED_ROW_2  = 1452
-      ER_DATA_TOO_LONG        = 781, 531
-      ER_OUT_OF_RANGE         = 935
-      ER_LOCK_DEADLOCK        = [72..76]
-      ER_CANNOT_ADD_FOREIGN   = [920, 921, 922, 927]
-      ER_CANNOT_CREATE_TABLE  = 65,
-                                # ER_LOCK_WAIT_TIMEOUT    = 1205
-                                ER_QUERY_INTERRUPTED = 790
+      ER_DATA_TOO_LONG = 781, 531
+      ER_OUT_OF_RANGE = 935
+      ER_LOCK_DEADLOCK = [72..76]
+      ER_CANNOT_ADD_FOREIGN = [920, 921, 922, 927]
+      ER_CANNOT_CREATE_TABLE = 65,
+                               # ER_LOCK_WAIT_TIMEOUT    = 1205
+                               ER_QUERY_INTERRUPTED = 790
       # ER_QUERY_TIMEOUT        = 3024
       ER_FK_INCOMPATIBLE_COLUMNS = [918, 923]
 
@@ -649,10 +650,10 @@ module ActiveRecord
           NotNullViolation.new(message, sql: sql, binds: binds)
         when ER_LOCK_DEADLOCK
           Deadlocked.new(message, sql: sql, binds: binds)
-        # when ER_LOCK_WAIT_TIMEOUT
-        #   LockWaitTimeout.new(message, sql: sql, binds: binds)
-        # when ER_QUERY_TIMEOUT #, ER_FILSORT_ABORT
-        #   StatementTimeout.new(message, sql: sql, binds: binds)
+          # when ER_LOCK_WAIT_TIMEOUT
+          #   LockWaitTimeout.new(message, sql: sql, binds: binds)
+          # when ER_QUERY_TIMEOUT #, ER_FILSORT_ABORT
+          #   StatementTimeout.new(message, sql: sql, binds: binds)
         when ER_QUERY_INTERRUPTED
           QueryCanceled.new(message, sql: sql, binds: binds)
         else
@@ -676,7 +677,7 @@ module ActiveRecord
       def rename_column_for_alter(table_name, column_name, new_column_name)
         return rename_column_sql(table_name, column_name, new_column_name) if supports_rename_column?
 
-        column  = column_for(table_name, column_name)
+        column = column_for(table_name, column_name)
         options = {
           default: column.default,
           null: column.null,
