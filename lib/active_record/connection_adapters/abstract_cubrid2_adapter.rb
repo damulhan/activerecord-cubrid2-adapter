@@ -200,7 +200,7 @@ module ActiveRecord
 
         stmt = nil
 
-        #pp "######### #{sql}"
+        # pp "######### #{sql}"
         log(sql, name) do
           ActiveSupport::Dependencies.interlock.permit_concurrent_loads do
             stmt = @connection.query(sql)
@@ -241,19 +241,32 @@ module ActiveRecord
 
       # SCHEMA STATEMENTS ========================================
 
-      # Drops the database: not supported now
-      def recreate_database(_name, _options = {})
-        raise 'In Cubrid create/drop database not supported'
+      # Recreate database
+      def recreate_database(name, options = {})
+        drop_database(name)
+        create_database(name, options)
       end
 
-      # Create a new Cubrid database: not supported now
-      def create_database(_name, _options = {})
-        raise 'In Cubrid create/drop database not supported'
+      # Create a new Cubrid database
+      # TODO: not workign with rake db:create 
+      def create_database(name, options = {})
+        options[:db_volume_size] ||= '20' # megabytes
+        options[:log_volume_size] ||= '20' # megabytes
+        options[:encoding] ||= 'en_US.utf8'
+
+        Kernel.exec 'cubrid createdb ' +
+             "--db-volume-size=#{options[:db_volume_size]}M " +
+             "--log-volume-size=#{options[:log_volume_size]}M #{name} " +
+             "#{options[:encoding]}"
+        
+        Kernel.exec "cubrid service start #{name}"
       end
 
-      # Drops a Cubrid database: not supported now
-      def drop_database(_name) # :nodoc:
-        raise 'In Cubrid create/drop database not supported'
+      # Drops a Cubrid database
+      # TODO: not workign with rake db:drop
+      def drop_database(name)
+        Kernel.exec "cubrid service stop #{name}"
+        Kernel.exec "cubrid deletedb #{name}"        
       end
 
       def current_database
