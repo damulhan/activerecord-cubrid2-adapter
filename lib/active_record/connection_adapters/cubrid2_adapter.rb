@@ -13,7 +13,7 @@ module ActiveRecord
       config = config.symbolize_keys
       config[:flags] ||= 0
 
-      client = Cubrid2::Client.new(config)
+      client = ::Cubrid2::Client.new(config)
       ConnectionAdapters::Cubrid2Adapter.new(client, logger, nil, config)
     rescue Cubrid2::Error => e
       raise ActiveRecord::NoDatabaseError if e.error_number == ER_DATABASE_CONNECTION_ERROR
@@ -145,7 +145,7 @@ module ActiveRecord
       private
 
       def connect
-        @connection = Cubrid2::Client.new(@config)
+        @connection = ::Cubrid2::Client.new(@config)
         configure_connection
       end
 
